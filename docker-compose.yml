@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # 1. Servis: PostgreSQL Veri Tabanı Kutusu
+  strapi-db:
+    container_name: strapi-db
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: strapiuser
+      POSTGRES_PASSWORD: strapi_guclu_sifre
+      POSTGRES_DB: strapidb
+    volumes:
+      # Verilerin bilgisayarın kapandığında silinmemesi için Docker içinde saklıyoruz
+      - strapi-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - strapi-network
+
+  # 2. Servis: Bizim Strapi Projesi Kutusu
+  strapi-app:
+    container_name: strapi-app
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "1337:1337"
+    volumes:
+      # Bilgisayarında kod değiştirdiğinde Docker'ın anında algılaması için klasörleri bağlıyoruz (Kritik Ayar)
+      - .:/opt/app
+      - /opt/app/node_modules
+      - /opt/app/.strapi
+    networks:
+      - strapi-network
+    depends_on:
+      - strapi-db
+
+volumes:
+  strapi-data:
+
+networks:
+  strapi-network:
+    driver: bridge
